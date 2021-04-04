@@ -60,10 +60,23 @@ void setup(){
 
 void loop(){
  static uint32_t countUpdate, countFillData, countMicroRentgen, previousParticlCount;
- static float scalingFactor;
+ static double scalingFactor;
  static uint32_t colour, microrentgen=0;
 
  delay(0);
+
+//check keys and reset total particle counter
+  if (myESPboy.getKeys()){
+    myESPboy.playTone(100,100);
+    delay(100);
+    counterParticlesFromStart=0;
+    myESPboy.playTone(200,100);
+    delay(500);
+    myESPboy.tft.setTextSize(2);
+    myESPboy.tft.setCursor(0,48);
+    myESPboy.tft.print("        ");
+    countFillData=0;
+  };
 
 //beep if particle detected
   if(previousParticlCount != counterParticlesFromStart){
@@ -102,12 +115,12 @@ void loop(){
 
     myESPboy.tft.setTextSize(1);
     myESPboy.tft.setCursor(0,38);
-    myESPboy.tft.print("impulses total");
+    myESPboy.tft.print("particles total");
     
     myESPboy.tft.setTextSize(2);
     myESPboy.tft.setCursor(0,48);
     myESPboy.tft.print(counterParticlesFromStart);
-    myESPboy.tft.print("  ");
+    myESPboy.tft.print(" ");
   }
 
 
@@ -122,10 +135,17 @@ void loop(){
     uint32_t maxDataVal=0;
     for (uint8_t i=0; i<MAX_DATA; i++){
       if(data[i] > maxDataVal) maxDataVal = data[i];}
-    if (maxDataVal > MAX_HEIGHT) scalingFactor = (float)MAX_HEIGHT / (float)maxDataVal;
+    if (maxDataVal > MAX_HEIGHT) scalingFactor = (double)MAX_HEIGHT / (double)maxDataVal;
     else scalingFactor = 1;
 
-    myESPboy.tft.fillRect(0,128 - 6 - MAX_HEIGHT, 128, MAX_HEIGHT, TFT_BLACK);
+    String toPrint = (String)((uint32_t)(((3600000/(double)DELAY_BETWEEN_FILLING_DATA) * maxDataVal) / (double)IMPULSES_PER_HOUR_EQUAL_TO_ONE_MICRORENTGEN));
+    myESPboy.tft.setTextColor(TFT_RED, TFT_BLACK);
+    myESPboy.tft.setTextSize(1);
+    toPrint = " max."+toPrint+" ";
+    myESPboy.tft.setCursor(128-(toPrint.length()-2)*8, 53);
+    myESPboy.tft.print(toPrint);
+
+    myESPboy.tft.fillRect(0,128 - 7 - MAX_HEIGHT, 128, MAX_HEIGHT+1, TFT_BLACK);
     
     for (uint8_t i=0; i<MAX_DATA; i++){
       if(data[i] < COLOR_GREEN_LEVEL) colour=TFT_GREEN;
